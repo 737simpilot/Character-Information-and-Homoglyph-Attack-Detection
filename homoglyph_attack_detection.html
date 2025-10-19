@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Information and Homoglyph Attack Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .highlight-red {
+            color: red;
+            font-weight: bold;
+            animation: blink 1s step-start infinite;
+        }
+        .highlight-blue {
+            color: blue;
+            font-weight: bold;
+            animation: blink 1s step-start infinite;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        h1 {
+            text-align: center;
+        }
+        .more-info {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+        }
+		.ASCII-CHARACTERS {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+        }
+		.UNICODE-CHARACTERS {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Character Information and Homoglyph Attack Detection</h1>
+        <a class="more-info" href="https://en.wikipedia.org/wiki/IDN_homograph_attack" target="_blank">More Information</a>
+		<a class="ASCII-CHARACTERS" href="http://web.archive.org/web/20240830060222/https://www.cs.cmu.edu/~pattis/15-1XX/common/handouts/ascii.html" target="_blank">ASCII Characters</a>
+		<a class="UNICODE-CHARACTERS" href="http://web.archive.org/web/20240519075732/https://www.unicodepedia.com/groups/basic-latin/" target="_blank">UNICODE Characters</a>
+        <form id="characterForm">
+            <label for="inputString">Enter characters:</label><br>
+            <input type="text" id="inputString" name="inputString" required>
+            <input type="submit" value="Submit">
+        </form>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('characterForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const inputString = document.getElementById('inputString').value;
+            const resultDiv = document.getElementById('result');
+            
+            // Define characters to be highlighted in blue
+            const blueHighlightChars = new Set(['l', 'I', 'i', 'j', '0', 'O']);
+            // Define the links for these characters
+            const links = {
+                'l': 'https://en.wikipedia.org/wiki/L',
+                'I': 'https://en.wikipedia.org/wiki/I',
+                'i': 'https://en.wikipedia.org/wiki/I',
+                'j': 'https://en.wikipedia.org/wiki/J',
+                '0': 'https://en.wikipedia.org/wiki/0',
+                'O': 'https://en.wikipedia.org/wiki/O'
+            };
+
+            let outputHtml = '<h2>Character Details:</h2>';
+
+            for (let i = 0; i < inputString.length; i++) {
+                const char = inputString[i];
+                const unicodeCode = char.codePointAt(0);
+                const asciiValue = (char.charCodeAt(0) <= 127) ? char.charCodeAt(0) : 'N/A';
+
+                let highlightClass = '';
+                let alphabet = '';
+                let output = '';
+
+                if (blueHighlightChars.has(char)) {
+                    highlightClass = 'highlight-blue';
+                    output = `<a href="${links[char]}" target="_blank">read here</a>`;
+                    alphabet = 'Special-Possible Homograph Attack. Make Sure This Is The Correct Letter.';
+                } else if (unicodeCode >= 0x0400 && unicodeCode <= 0x04FF) {
+                    alphabet = 'Cyrillic';
+                    highlightClass = 'highlight-red';
+                    output = char;
+                } else if (unicodeCode >= 0x0030 && unicodeCode <= 0x0039) {
+                    alphabet = 'Digits';
+                    highlightClass = 'highlight-red';
+                    output = char;
+                } else if ((unicodeCode >= 0x0041 && unicodeCode <= 0x005A) || (unicodeCode >= 0x0061 && unicodeCode <= 0x007A)) {
+                    alphabet = 'Latin Alphabet';
+                    // Ensure output is set for Latin characters
+                    output = char;
+                } else {
+                    alphabet = 'Other';
+                    highlightClass = 'highlight-red';
+                    output = char;
+                }
+
+                // Output details for each character
+                outputHtml += `
+                    <p><strong>Character:</strong> <span class="${highlightClass}">${output}</span><br>
+                    <strong>Unicode Code Point:</strong> U+${unicodeCode.toString(16).toUpperCase()}<br>
+                    <strong>ASCII Value:</strong> ${asciiValue !== 'N/A' ? asciiValue : 'N/A'}<br>
+                    <strong>Alphabet:</strong> ${alphabet}</p>
+                `;
+            }
+
+            resultDiv.innerHTML = outputHtml;
+        });
+    </script>
+</body>
+</html>
